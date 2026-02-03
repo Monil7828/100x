@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Voice Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Crimson+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0a0e27;
+            --secondary: #1a1f3a;
+            --accent: #00d9ff;
+            --accent-glow: rgba(0, 217, 255, 0.3);
+            --text: #e0e6ed;
+            --text-dim: #8892a6;
+            --error: #ff5555;
+            --success: #50fa7b;
+        }
+
+        body {
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(80, 250, 123, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.speaking {
+            background: var(--success);
+            box-shadow: 0 0 20px rgba(80, 250, 123, 0.5);
+        }
+
+        .voice-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .record-btn {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            color: var(--primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .record-btn:hover::before {
+            width: 120px;
+            height: 120px;
+        }
+
+        .record-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 217, 255, 0.4);
+        }
+
+        .record-btn:active {
+            transform: scale(0.95);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, var(--error), #ff8888);
+            animation: recordPulse 1.5s ease-in-out infinite;
+        }
+
+        .record-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .text-input-area {
+            margin-top: 20px;
+        }
+
+        .text-input-area textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'Crimson Pro', serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .text-input-area textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .text-input-area button {
+            margin-top: 10px;
+            padding: 12px 30px;
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .text-input-area button:hover {
+            background: var(--success);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(80, 250, 123, 0.3);
+        }
+
+        .transcript-area {
+            margin-top: 30px;
+        }
+
+        .transcript-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .transcript-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .transcript-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .transcript-box::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: messageSlideIn 0.4s ease-out;
+        }
+
+        .message.user {
+            background: rgba(0, 217, 255, 0.1);
+            border-left: 3px solid var(--accent);
+        }
+
+        .message.bot {
+            background: rgba(80, 250, 123, 0.1);
+            border-left: 3px solid var(--success);
+        }
+
+        .message strong {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .message.bot strong {
+            color: var(--success);
+        }
+
+        .error-message {
+            background: rgba(255, 85, 85, 0.1);
+            border: 1px solid var(--error);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            animation: shake 0.5s ease-out;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .instructions h3 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .instructions li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: var(--text-dim);
+        }
+
+        .instructions li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes recordPulse {
+            0%, 100% {
+                box-shadow: 0 10px 30px rgba(255, 85, 85, 0.4);
+            }
+            50% {
+                box-shadow: 0 10px 50px rgba(255, 85, 85, 0.6);
+            }
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .card {
+                padding: 25px;
+            }
+            .record-btn {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VOICE BOT</h1>
+            <p>Interview Assistant</p>
+        </div>
+
+        <div class="card">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Ready to listen</span>
+            </div>
+
+            <div class="voice-controls">
+                <button class="record-btn" id="recordBtn">
+                    <span id="btnText">SPEAK</span>
+                </button>
+            </div>
+
+            <div class="text-input-area">
+                <textarea id="textInput" placeholder="Or type your question here..."></textarea>
+                <button id="textSubmitBtn">Submit Question</button>
+            </div>
+
+            <div class="transcript-area">
+                <div class="transcript-box" id="transcriptBox">
+                    <div class="message bot">
+                        <strong>Bot:</strong> Hello! I'm ready to answer questions about my background, skills, and experiences. Click the button above to ask me anything, or type your question below.
+                    </div>
+                </div>
+            </div>
+
+            <div class="instructions">
+                <h3>How to Use:</h3>
+                <ul>
+                    <li>Click the SPEAK button and ask your question</li>
+                    <li>Or type your question in the text box</li>
+                    <li>I'll respond with voice and text</li>
+                    <li>Sample questions: "What's your life story?", "What's your superpower?", "What are your growth areas?"</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURATION - CUSTOMIZE THIS SECTION
+        // ========================================
+        const CANDIDATE_INFO = {
+            name: "Your Name",
+            lifeStory: "I'm a passionate developer with a background in AI and machine learning. I graduated from IIT Dhanbad and have been working on innovative AI projects for the past few years. I love solving complex problems and building intelligent systems that make a real impact.",
+            superpower: "My superpower is the ability to quickly understand complex technical concepts and explain them in simple terms. I can bridge the gap between technical and non-technical stakeholders, making me an effective communicator and team player.",
+            growthAreas: [
+                "Deep learning architecture design - I want to master advanced neural network architectures",
+                "Cloud infrastructure and DevOps - Building scalable AI systems in production",
+                "Product management skills - Understanding user needs and translating them into technical solutions"
+            ],
+            misconception: "Some coworkers think I'm very serious because I'm focused during work, but I actually have a great sense of humor and love collaborating in a fun, energetic environment.",
+            pushingBoundaries: "I push my boundaries by constantly taking on projects outside my comfort zone. I participate in hackathons, contribute to open-source projects, and dedicate time each week to learning new technologies. I believe in the 'learn by doing' approach.",
+            background: {
+                education: "IIT Dhanbad",
+                skills: ["Python", "Machine Learning", "Deep Learning", "NLP", "AI Agent Development"],
+                interests: ["Generative AI", "Voice Technology", "Automation"]
+            }
+        };
+
+        // API Configuration - Using Groq (Free alternative to OpenAI)
+        const API_CONFIG = {
+            endpoint: "https://api.groq.com/openai/v1/chat/completions",
+            model: "mixtral-8x7b-32768",
+            apiKey: "YOUR_GROQ_API_KEY_HERE" // Get free key from console.groq.com
+        };
+
+        // ========================================
+        // APPLICATION CODE
+        // ========================================
+        let recognition = null;
+        let isListening = false;
+        let isSpeaking = false;
+
+        const recordBtn = document.getElementById('recordBtn');
+        const btnText = document.getElementById('btnText');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const transcriptBox = document.getElementById('transcriptBox');
+        const textInput = document.getElementById('textInput');
+        const textSubmitBtn = document.getElementById('textSubmitBtn');
+
+        // Initialize Speech Recognition
+        function initializeSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    updateUI('listening');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    addMessage('user', transcript);
+                    processQuestion(transcript);
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    addMessage('error', `Error: ${event.error}. Please try again or type your question.`);
+                    updateUI('ready');
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    if (!isSpeaking) {
+                        updateUI('ready');
+                    }
+                };
+            } else {
+                addMessage('error', 'Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your questions.');
+                recordBtn.classList.add('disabled');
+            }
+        }
+
+        // Update UI based on state
+        function updateUI(state) {
+            switch(state) {
+                case 'listening':
+                    btnText.textContent = 'LISTENING';
+                    recordBtn.classList.add('recording');
+                    statusDot.classList.add('active');
+                    statusText.textContent = 'Listening...';
+                    break;
+                case 'processing':
+                    btnText.textContent = 'THINKING';
+                    recordBtn.classList.remove('recording');
+                    recordBtn.classList.add('disabled');
+                    statusDot.classList.remove('active');
+                    statusText.textContent = 'Processing...';
+                    break;
+                case 'speaking':
+                    btnText.textContent = 'SPEAKING';
+                    statusDot.classList.add('speaking');
+                    statusText.textContent = 'Speaking...';
+                    break;
+                case 'ready':
+                default:
+                    btnText.textContent = 'SPEAK';
+                    recordBtn.classList.remove('recording', 'disabled');
+                    statusDot.classList.remove('active', 'speaking');
+                    statusText.textContent = 'Ready to listen';
+                    break;
+            }
+        }
+
+        // Add message to transcript
+        function addMessage(type, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            if (type === 'error') {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = text;
+            } else {
+                const label = type === 'user' ? 'You' : 'Bot';
+                messageDiv.innerHTML = `<strong>${label}:</strong> ${text}`;
+            }
+            
+            transcriptBox.appendChild(messageDiv);
+            transcriptBox.scrollTop = transcriptBox.scrollHeight;
+        }
+
+        // Generate personalized response
+        function generateResponse(question) {
+            const lowerQuestion = question.toLowerCase();
+            
+            // Pattern matching for common questions
+            if (lowerQuestion.includes('life story') || lowerQuestion.includes('about you') || lowerQuestion.includes('introduce yourself')) {
+                return CANDIDATE_INFO.lifeStory;
+            }
+            
+            if (lowerQuestion.includes('superpower') || lowerQuestion.includes('strength') || lowerQuestion.includes('best at')) {
+                return CANDIDATE_INFO.superpower;
+            }
+            
+            if (lowerQuestion.includes('grow') || lowerQuestion.includes('improve') || lowerQuestion.includes('learn')) {
+                return `I'd like to grow in three main areas: ${CANDIDATE_INFO.growthAreas.join('; ')}.`;
+            }
+            
+            if (lowerQuestion.includes('misconception') || lowerQuestion.includes('misunderstand')) {
+                return CANDIDATE_INFO.misconception;
+            }
+            
+            if (lowerQuestion.includes('boundaries') || lowerQuestion.includes('limits') || lowerQuestion.includes('challenge')) {
+                return CANDIDATE_INFO.pushingBoundaries;
+            }
+            
+            if (lowerQuestion.includes('education') || lowerQuestion.includes('study') || lowerQuestion.includes('college')) {
+                return `I studied at ${CANDIDATE_INFO.background.education}, where I developed a strong foundation in computer science and AI.`;
+            }
+            
+            if (lowerQuestion.includes('skill') || lowerQuestion.includes('technology')) {
+                return `My key skills include ${CANDIDATE_INFO.background.skills.join(', ')}. I'm particularly passionate about ${CANDIDATE_INFO.background.interests.join(', ')}.`;
+            }
+
+            // Default response for unmatched questions
+            return `That's a great question! Based on my experience at ${CANDIDATE_INFO.background.education} and my work in ${CANDIDATE_INFO.background.interests[0]}, I bring a unique perspective to problem-solving. I'm constantly learning and pushing myself to grow, especially in areas like ${CANDIDATE_INFO.growthAreas[0]}.`;
+        }
+
+        // Process question using AI or pattern matching
+        async function processQuestion(question) {
+            updateUI('processing');
+            
+            try {
+                let response;
+                
+                // Try AI API first if key is configured
+                if (API_CONFIG.apiKey && API_CONFIG.apiKey !== 'YOUR_GROQ_API_KEY_HERE') {
+                    response = await getAIResponse(question);
+                } else {
+                    // Fallback to pattern matching
+                    response = generateResponse(question);
+                }
+                
+                addMessage('bot', response);
+                speakResponse(response);
+                
+            } catch (error) {
+                console.error('Error processing question:', error);
+                // Fallback to pattern matching on error
+                const response = generateResponse(question);
+                addMessage('bot', response);
+                speakResponse(response);
+            }
+        }
+
+        // Get AI response from API
+        async function getAIResponse(question) {
+            const systemPrompt = `You are ${CANDIDATE_INFO.name}, a candidate being interviewed. Answer questions as this person would.
+
+Background:
+- Life Story: ${CANDIDATE_INFO.lifeStory}
+- Superpower: ${CANDIDATE_INFO.superpower}
+- Growth Areas: ${CANDIDATE_INFO.growthAreas.join('; ')}
+- Misconception: ${CANDIDATE_INFO.misconception}
+- Pushing Boundaries: ${CANDIDATE_INFO.pushingBoundaries}
+- Education: ${CANDIDATE_INFO.background.education}
+- Skills: ${CANDIDATE_INFO.background.skills.join(', ')}
+- Interests: ${CANDIDATE_INFO.background.interests.join(', ')}
+
+Answer in first person, be concise (2-3 sentences), and sound natural and conversational.`;
+
+            const response = await fetch(API_CONFIG.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_CONFIG.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: API_CONFIG.model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: question }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 200
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('API request failed');
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content.trim();
+        }
+
+        // Text to Speech
+        function speakResponse(text) {
+            if ('speechSynthesis' in window) {
+                isSpeaking = true;
+                updateUI('speaking');
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    updateUI('ready');
+                };
+                
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    updateUI('ready');
+                };
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                updateUI('ready');
+            }
+        }
+
+        // Event Listeners
+        recordBtn.addEventListener('click', () => {
+            if (recognition && !isListening && !isSpeaking) {
+                recognition.start();
+            }
+        });
+
+        textSubmitBtn.addEventListener('click', () => {
+            const question = textInput.value.trim();
+            if (question) {
+                addMessage('user', question);
+                processQuestion(question);
+                textInput.value = '';
+            }
+        });
+
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                textSubmitBtn.click();
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initializeSpeechRecognition();
+        });
+    </script>
+</body>
+</html>
