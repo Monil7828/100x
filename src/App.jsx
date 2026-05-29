@@ -24,55 +24,64 @@ export default function App() {
   }, [messages]);
 
   const generateResponse = (question) => {
-    const q = question.toLowerCase();
+  const q = question.toLowerCase().trim();
 
-    if (q.includes("life") || q.includes("about")) {
-      return "I'm Monil Chandgadhiya, a Computer Science student at IIT (ISM) Dhanbad. I specialize in production-grade AI and full-stack systems, with a focus on GenAI pipelines, robust backend architecture, and real-time apps. My engineering-first mindset emphasizes structured design, measurable performance, and clean, scalable code.";
-    }
+  // Specific questions FIRST
 
-    if (q.includes("superpower") || q.includes("strength")) {
-      return "My superpower is end-to-end system delivery. At AI2Go Solutions, I engineered a GenAI healthcare assistant with RAG and vector databases, slashing retrieval latency by 30% while boosting accuracy. I thrive on transforming ambitious ideas into reliable, high-performance products.";
-    }
+  if (
+    (q.includes("coworkers") && q.includes("misconception")) ||
+    q.includes("misconception")
+  ) {
+    return "My coworkers often assume I'm all about the code and competition, but the real misconception is that I'm only technical. In reality, I'm highly product-minded and spend a lot of time thinking about architecture, maintainability, user experience, and business impact. I enjoy understanding why we're building something, not just how.";
+  }
 
-    if (q.includes("grow") || q.includes("improve") || q.includes("future")) {
-      return "I'm honing multi-agent AI systems, LLM orchestration, and scalable inference engines. Distributed systems excite me most—crafting AI platforms that stay rock-solid under heavy, real-world loads.";
-    }
+  if (
+    q.includes("life story") ||
+    q.includes("tell me about yourself") ||
+    q.includes("your background") ||
+    q.includes("know about your life")
+  ) {
+    return "I'm Monil Chandgadhiya, a Computer Science student at IIT (ISM) Dhanbad. I specialize in production-grade AI and full-stack systems, with a focus on GenAI pipelines, robust backend architecture, and real-time apps. My engineering-first mindset emphasizes structured design, measurable performance, and clean, scalable code.";
+  }
 
-    if (q.includes("misconception")) {
-      return "People often peg me as purely competitive due to my JEE ranks and coding contests. Truth is, I'm deeply product-focused: obsessed with architecture, long-term maintainability, and tools that deliver real value to users.";
-    }
+  if (q.includes("superpower") || q.includes("strength")) {
+    return "My superpower is end-to-end system delivery. At AI2Go Solutions, I engineered a GenAI healthcare assistant with RAG and vector databases, slashing retrieval latency by 30% while boosting accuracy. I thrive on transforming ambitious ideas into reliable, high-performance products.";
+  }
 
-    if (q.includes("boundary") || q.includes("limit") || q.includes("push")) {
-      return "I stretch limits through ambitious projects like real-time multiplayer games with WebSockets, scalable Next.js/Node.js platforms, and tuned GenAI RAG systems that nail low-latency retrieval under scale.";
-    }
+  if (q.includes("grow") || q.includes("improve") || q.includes("future")) {
+    return "I'm honing multi-agent AI systems, LLM orchestration, and scalable inference engines. Distributed systems excite me most—crafting AI platforms that stay rock-solid under heavy, real-world loads.";
+  }
 
-    if (q.includes("ai") || q.includes("genai")) {
-      return "In GenAI, I build structured pipelines beyond basic prompting—leveraging embeddings, vector search, RAG, and backend orchestration. I view LLMs as system components, grounded in domain data for precise, efficient responses.";
-    }
+  if (q.includes("boundary") || q.includes("limit") || q.includes("push")) {
+    return "I stretch limits through ambitious projects like real-time multiplayer games with WebSockets, scalable Next.js/Node.js platforms, and tuned GenAI RAG systems that nail low-latency retrieval under scale.";
+  }
 
-    if (q.includes("project")) {
-      return "Highlights: GenAI healthcare assistant (RAG-powered), real-time math competition game (React, Redux, Node.js, Socket.IO), and full-stack ecommerce platform (Next.js, MongoDB, Stripe). I blend scalability with seamless UX.";
-    }
+  if (q.includes("ai") || q.includes("genai")) {
+    return "In GenAI, I build structured pipelines beyond basic prompting—leveraging embeddings, vector search, RAG, and backend orchestration. I view LLMs as system components, grounded in domain data for precise, efficient responses.";
+  }
 
-    if (q.includes("backend")) {
-      return "Backend expertise centers on Node.js/Express: clean service layers, optimized queries, and scalable schemas with MongoDB, vector DBs, and secure auth. All built for production reliability.";
-    }
+  if (q.includes("project")) {
+    return "Highlights: GenAI healthcare assistant (RAG-powered), real-time math competition game (React, Redux, Node.js, Socket.IO), and full-stack ecommerce platform (Next.js, MongoDB, Stripe). I blend scalability with seamless UX.";
+  }
 
-    if (q.includes("frontend")) {
-      return "Frontend: Responsive React/Next.js apps with sharp state management, perf tweaks, and intuitive designs that make complex systems feel effortless.";
-    }
+  if (q.includes("backend")) {
+    return "Backend expertise centers on Node.js/Express: clean service layers, optimized queries, and scalable schemas with MongoDB, vector DBs, and secure auth. All built for production reliability.";
+  }
 
-    if (q.includes("competitive") || q.includes("cp")) {
-      return "Competitive programming sharpened my algorithmic edge—100+ LeetCode solves, 175+ on CodeChef. It fuels efficient, clever solutions in real-world systems.";
-    }
+  if (q.includes("frontend")) {
+    return "Frontend: Responsive React/Next.js apps with sharp state management, perf tweaks, and intuitive designs that make complex systems feel effortless.";
+  }
 
-    if (q.includes("hello") || q.includes("hi")) {
-      return "Hey! I'm channeling Monil. Ask away on AI architecture, backend engineering, full-stack builds, or perf optimization.";
-    }
+  if (q.includes("competitive") || q.includes("cp")) {
+    return "Competitive programming sharpened my algorithmic edge—100+ LeetCode solves, 175+ on CodeChef. It fuels efficient, clever solutions in real-world systems.";
+  }
 
-    return "I tackle challenges via system design and performance-first thinking. From AI pipelines to full-stack apps, it's all about scalability, elegant architecture, and tangible results.";
-  };
+  if (q.includes("hello") || q.includes("hi")) {
+    return "Hey! I'm channeling Monil. Ask away on AI architecture, backend engineering, full-stack builds, or performance optimization.";
+  }
 
+  return "I tackle challenges via system design and performance-first thinking. From AI pipelines to full-stack apps, it's all about scalability, elegant architecture, and tangible results.";
+};
 
   const speak = (text) => {
     if ("speechSynthesis" in window) {
